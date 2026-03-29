@@ -1,6 +1,10 @@
 import z from "zod";
 
 import { getCalendar } from "@calcom/app-store/_utils/getCalendar";
+import {
+  isRevocableCredentialType,
+  revokeOAuthCredential,
+} from "@calcom/app-store/_utils/oauth/revokeOAuthCredential";
 import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
 import { DailyLocationType } from "@calcom/app-store/locations";
 import {
@@ -15,6 +19,7 @@ import { deleteWebhookScheduledTriggers } from "@calcom/features/webhooks/lib/sc
 import { buildNonDelegationCredential } from "@calcom/lib/delegationCredential";
 import { isPrismaObjOrUndefined } from "@calcom/lib/isPrismaObj";
 import { parseRecurringEvent } from "@calcom/lib/isRecurringEvent";
+import logger from "@calcom/lib/logger";
 import { getTranslation } from "@calcom/i18n/server";
 import { bookingMinimalSelect, prisma } from "@calcom/prisma";
 import type { Prisma } from "@calcom/prisma/client";
@@ -29,6 +34,8 @@ type App = {
   categories: AppCategories[];
   dirName: string;
 } | null;
+
+const log = logger.getSubLogger({ prefix: ["features/credentials/handleDeleteCredential"] });
 
 const isVideoOrConferencingApp = (app: App) =>
   app?.categories.includes(AppCategories.video) || app?.categories.includes(AppCategories.conferencing);
@@ -479,6 +486,24 @@ const handleDeleteCredential = async ({
   }
 
   // Validated that credential is user's above
+  if (isRevocableCredentialType(credential.type)) {
+    const revokeResult = await revokeOAuthCredential({
+      credentialType: credential.type,
+      credentialKey: credential.key,
+    });
+
+    if (revokeResult.attempted && !revokeResult.revoked) {
+      log.warn("Provider credential revocation failed during credential deletion", {
+        credentialId,
+        credentialType: credential.type,
+        teamId,
+        userId,
+        revokeUrl: revokeResult.url,
+        reason: revokeResult.reason,
+      });
+    }
+  }
+
   await prisma.credential.delete({
     where: {
       id: credentialId,
