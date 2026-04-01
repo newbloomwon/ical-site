@@ -5,7 +5,20 @@ import { CredentialRepository } from "@calcom/features/credentials/repositories/
 import { EventTypeRepository } from "@calcom/features/eventtypes/repositories/eventTypeRepository";
 import { UserRepository } from "@calcom/features/users/repositories/UserRepository";
 import { prisma } from "@calcom/prisma";
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+const revokeOAuthCredentialMock = vi.fn(async () => ({ attempted: true, revoked: true }));
+
+vi.mock("@calcom/app-store/_utils/oauth/revokeOAuthCredential", async () => {
+  const actual = await vi.importActual<typeof import("@calcom/app-store/_utils/oauth/revokeOAuthCredential")>(
+    "@calcom/app-store/_utils/oauth/revokeOAuthCredential"
+  );
+
+  return {
+    ...actual,
+    revokeOAuthCredential: revokeOAuthCredentialMock,
+  };
+});
 const testUser = {
   email: "test@test.com",
   username: "test-user",
@@ -27,6 +40,7 @@ const setupCredential = async (credentialInput) => {
 describe("deleteCredential", () => {
   beforeEach(async () => {
     mockNoTranslations();
+    revokeOAuthCredentialMock.mockClear();
   });
 
   describe("individual credentials", () => {
@@ -124,5 +138,50 @@ describe("deleteCredential", () => {
 
     // TODO: Add test for payment apps
     // TODO: Add test for event type apps
+  });
+
+  describe("provider revocation", () => {
+    test("attempts provider revocation for revocable credential types", async () => {
+      const handleDeleteCredential = (await import("./handleDeleteCredential")).default;
+
+      const user = await new UserRepository(prisma).create({
+        ...testUser,
+      });
+
+      await PrismaAppRepository.seedApp("zoomvideo");
+
+      await setupCredential({
+        userId: user.id,
+        type: "zoom_video",
+        appId: "zoom",
+      });
+
+      await handleDeleteCredential({ userId: user.id, userMetadata: user.metadata, credentialId: 123 });
+
+      expect(revokeOAuthCredentialMock).toHaveBeenCalledTimes(1);
+      expect(revokeOAuthCredentialMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          credentialType: "zoom_video",
+        })
+      );
+    });
+
+    test("does not attempt provider revocation for non-revocable credential types", async () => {
+      const handleDeleteCredential = (await import("./handleDeleteCredential")).default;
+
+      const user = await new UserRepository(prisma).create({
+        ...testUser,
+      });
+
+      await setupCredential({
+        userId: user.id,
+        type: "test-credential",
+        appId: "test-credential",
+      });
+
+      await handleDeleteCredential({ userId: user.id, userMetadata: user.metadata, credentialId: 123 });
+
+      expect(revokeOAuthCredentialMock).not.toHaveBeenCalled();
+    });
   });
 });
