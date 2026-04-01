@@ -22,7 +22,6 @@ const formatFileWithBiome = (filePath: string) => {
     {
       stdio: "inherit",
       cwd: repoRoot,
-      shell: true,
     }
   );
 
