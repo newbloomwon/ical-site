@@ -60,6 +60,9 @@ describe("revokeOAuthCredential", () => {
       ok: true,
       status: 200,
     } as Response);
+    const expectedAuthorizationHeader = `Basic ${Buffer.from("zoom-client-id:zoom-client-secret").toString(
+      "base64"
+    )}`;
 
     const result = await revokeOAuthCredential({
       credentialType: "zoom_video",
@@ -74,7 +77,7 @@ describe("revokeOAuthCredential", () => {
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
-          Authorization: "Basic em9vbS1jbGllbnQtaWQ6em9vbS1jbGllbnQtc2VjcmV0",
+          Authorization: expectedAuthorizationHeader,
         }),
       })
     );

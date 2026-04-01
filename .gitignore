@@ -108,6 +108,9 @@ packages/**/.yarn/ci-cache/
 .claude/plans/
 .claude/settings.local.json
 
+# Local backup archives
+ical-site-essentials*.zip
+
 # Spec drafts (rough work, not ready for review)
 specs/**/_drafts/
 
