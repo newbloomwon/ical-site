@@ -63,7 +63,8 @@ const Page = async ({ params }: PageProps) => {
     }),
   ]);
 
-  const bookingsV3Enabled = featureStates["bookings-v3"]?.effectiveEnabled ?? false;
+  const forceBookingsV3Enabled = process.env.CALCOM_FORCE_BOOKINGS_V3 === "true";
+  const bookingsV3Enabled = forceBookingsV3Enabled || (featureStates["bookings-v3"]?.effectiveEnabled ?? false);
 
   return (
     <ShellMainAppDir

@@ -600,10 +600,14 @@ const ProfileForm = ({
     handleAccountDisconnect(getUpdatedFormValues(formMethods.getValues()));
   };
 
-  const { data: usersAttributes, isPending: usersAttributesPending } =
-    trpc.viewer.attributes.getByUserId.useQuery({
+  const { data: usersAttributes, isPending: usersAttributesPending } = trpc.viewer.attributes.getByUserId.useQuery(
+    {
       userId: user.id,
-    });
+    },
+    {
+      enabled: Boolean(user.id && userOrganization?.id),
+    }
+  );
 
   const {
     formState: { isSubmitting, isDirty },

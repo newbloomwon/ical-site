@@ -1,3 +1,4 @@
+import { useSession } from "next-auth/react";
 import type { Dispatch } from "react";
 import { shallow } from "zustand/shallow";
 
@@ -34,6 +35,7 @@ export function EditUserSheet({
   canChangeMemberRole?: boolean;
 }) {
   const { t } = useLocale();
+  const session = useSession();
   const { user: selectedUser } = state.editSheet;
   const orgBranding = useOrgBranding();
   const [editMode, setEditMode] = useEditMode((state) => [state.editMode, state.setEditMode], shallow);
@@ -53,7 +55,7 @@ export function EditUserSheet({
         userId: selectedUser?.id,
       },
       {
-        enabled: !!selectedUser?.id && !!canViewAttributes,
+        enabled: !!selectedUser?.id && !!canViewAttributes && !!session.data?.user?.org?.id,
       }
     );
 

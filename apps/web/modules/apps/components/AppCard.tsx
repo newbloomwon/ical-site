@@ -1,12 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import posthog from "posthog-js";
-
-import { InstallAppButton } from "@calcom/app-store/InstallAppButton";
 import { isRedirectApp } from "@calcom/app-store/_utils/redirectApps";
 import useAddAppMutation from "@calcom/app-store/_utils/useAddAppMutation";
+import { InstallAppButton } from "@calcom/app-store/InstallAppButton";
 import { doesAppSupportTeamInstall, isConferencing } from "@calcom/app-store/utils";
 import type { UserAdminTeams } from "@calcom/features/users/repositories/UserRepository";
 import { AppOnboardingSteps } from "@calcom/lib/apps/appOnboardingSteps";
@@ -18,9 +14,12 @@ import type { AppFrontendPayload as App } from "@calcom/types/App";
 import type { CredentialFrontendPayload as Credential } from "@calcom/types/Credential";
 import classNames from "@calcom/ui/classNames";
 import { Badge } from "@calcom/ui/components/badge";
-import { Button } from "@calcom/ui/components/button";
 import type { ButtonProps } from "@calcom/ui/components/button";
+import { Button } from "@calcom/ui/components/button";
 import { showToast } from "@calcom/ui/components/toast";
+import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
+import { useEffect, useState } from "react";
 
 interface AppCardProps {
   app: App;
@@ -71,6 +70,18 @@ export function AppCard({ app, credentials, searchText, userAdminTeams }: AppCar
       if (app.url) window.open(app.url, "_blank", "noopener,noreferrer");
       return;
     }
+
+    // Google Calendar is OAuth-first and should connect immediately from app-store cards.
+    if (app.type === "google_calendar") {
+      mutation.mutate({
+        type: app.type,
+        variant: app.variant,
+        slug: app.slug,
+        returnTo: `${WEBAPP_URL}/apps/installed/calendar?hl=${app.slug}`,
+      });
+      return;
+    }
+
     if (isConferencing(app.categories) && !app.concurrentMeetings) {
       mutation.mutate({
         type: app.type,

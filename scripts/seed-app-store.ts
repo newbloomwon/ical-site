@@ -7,12 +7,20 @@ import path from "node:path"
 
 import { appStoreMetadata } from "@calcom/app-store/appStoreMetaData";
 import { shouldEnableApp } from "@calcom/app-store/_utils/validateAppKeys";
-import prisma from "@calcom/prisma";
 import type { Prisma } from "@calcom/prisma/client";
 import { AppCategories } from "@calcom/prisma/enums";
 
 dotEnv.config({ path: path.resolve(__dirname, "../.env") });
 dotEnv.config({ path: path.resolve(__dirname, "../.env.appStore") });
+
+let prismaPromise: Promise<(typeof import("@calcom/prisma"))["default"]> | null = null;
+
+const getPrisma = async () => {
+  if (!prismaPromise) {
+    prismaPromise = import("@calcom/prisma").then((module) => module.default);
+  }
+  return prismaPromise;
+};
 
 async function createApp(
   /** The App identifier in the DB also used for public page in `/apps/[slug]` */
@@ -25,6 +33,7 @@ async function createApp(
   keys?: Prisma.AppCreateInput["keys"],
   isTemplate?: boolean
 ) {
+  const prisma = await getPrisma();
   try {
     const foundApp = await prisma.app.findFirst({
       /**
@@ -271,6 +280,7 @@ if (require.main === module) {
       process.exit(1);
     })
     .finally(async () => {
+      const prisma = await getPrisma();
       await prisma.$disconnect();
     });
 }

@@ -288,10 +288,15 @@ type DefaultValueType = {
 };
 
 function AttributesList(props: { selectedUserId: number }) {
-  const { data: usersAttributes, isPending: usersAttributesPending } =
-    trpc.viewer.attributes.getByUserId.useQuery({
+  const session = useSession();
+  const { data: usersAttributes, isPending: usersAttributesPending } = trpc.viewer.attributes.getByUserId.useQuery(
+    {
       userId: props.selectedUserId,
-    });
+    },
+    {
+      enabled: Boolean(props.selectedUserId && session.data?.user?.org?.id),
+    }
+  );
   const { data: attributes } = trpc.viewer.attributes.list.useQuery();
   const enabledAttributes = attributes?.filter((attr) => attr.enabled);
 
