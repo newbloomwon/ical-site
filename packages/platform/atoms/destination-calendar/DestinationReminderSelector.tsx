@@ -4,8 +4,12 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import type { ReminderMinutes } from "@calcom/trpc/server/routers/viewer/calendars/setDestinationReminder.schema";
 import { Select } from "@calcom/ui/components/form";
 
-const REMINDER_OPTIONS: Array<{ value: ReminderMinutes; label: string }> = [
-  { value: null, label: "use_default_reminders" },
+const DEFAULT_REMINDER_VALUE = "__default__";
+
+type ReminderOptionValue = ReminderMinutes | typeof DEFAULT_REMINDER_VALUE;
+
+const REMINDER_OPTIONS: Array<{ value: ReminderOptionValue; label: string }> = [
+  { value: DEFAULT_REMINDER_VALUE, label: "use_default_reminders" },
   { value: 0, label: "just_in_time" },
   { value: 10, label: "remind_minutes_before" },
   { value: 30, label: "remind_minutes_before" },
@@ -30,7 +34,9 @@ export const DestinationReminderSelector = ({
     label: typeof opt.value === "number" ? t(opt.label, { count: opt.value }) : t(opt.label),
   }));
 
-  const selectedOption = options.find((opt) => opt.value === value) ?? options[0];
+  const selectedOption =
+    options.find((opt) => (opt.value === DEFAULT_REMINDER_VALUE ? value === null : opt.value === value)) ??
+    options[0];
 
   return (
     <Select
@@ -39,7 +45,7 @@ export const DestinationReminderSelector = ({
       value={selectedOption}
       onChange={(newValue) => {
         if (newValue) {
-          onChange(newValue.value);
+          onChange(newValue.value === DEFAULT_REMINDER_VALUE ? null : newValue.value);
         }
       }}
       isLoading={isPending}

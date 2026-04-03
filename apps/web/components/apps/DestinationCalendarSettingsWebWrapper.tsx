@@ -8,14 +8,23 @@ import {
 import { showToast } from "@calcom/ui/components/toast";
 import { DestinationCalendarSettings } from "../../../../packages/platform/atoms/destination-calendar/DestinationCalendar";
 import { AtomsWrapper } from "../../../../packages/platform/atoms/src/components/atoms-wrapper";
+import { useEffect, useState } from "react";
+
 export const DestinationCalendarSettingsWebWrapper = ({
   connectedCalendars,
 }: {
   connectedCalendars?: RouterOutputs["viewer"]["calendars"]["connectedCalendars"];
 }): JSX.Element | null => {
   const { t } = useLocale();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const calendars = trpc.viewer.calendars.connectedCalendars.useQuery(undefined, {
     initialData: connectedCalendars,
+    trpc: { ssr: false },
+    enabled: isMounted,
   });
   const utils = trpc.useUtils();
   const mutation = trpc.viewer.calendars.setDestinationCalendar.useMutation({
@@ -34,7 +43,7 @@ export const DestinationCalendarSettingsWebWrapper = ({
     },
   });
 
-  if (!calendars.data?.connectedCalendars || calendars.data.connectedCalendars.length < 1) {
+  if (!isMounted || !calendars.data?.connectedCalendars || calendars.data.connectedCalendars.length < 1) {
     return null;
   }
 

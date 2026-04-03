@@ -64,6 +64,15 @@ export type AppPageProps = {
   paid?: AppType["paid"];
 };
 
+const getGoogleCalendarOAuthAddUrl = () => {
+  const state = {
+    fromApp: true,
+    onErrorReturnTo: `${WEBAPP_URL}/apps/google-calendar`,
+    returnTo: `${WEBAPP_URL}/apps/installed/calendar?hl=google-calendar`,
+  };
+  return `/api/integrations/googlecalendar/add?state=${encodeURIComponent(JSON.stringify(state))}`;
+};
+
 export const AppPage = ({
   name,
   type,
@@ -128,6 +137,13 @@ export const AppPage = ({
       return;
     }
     setIsLoading(true);
+
+    // Google Calendar is OAuth-first and should connect directly from app detail page.
+    if (type === "google_calendar") {
+      window.location.href = getGoogleCalendarOAuthAddUrl();
+      return;
+    }
+
     if (isConferencing(categories) && !concurrentMeetings) {
       mutation.mutate({
         type,

@@ -10,7 +10,7 @@ import CredentialActionsDropdown from "@calcom/web/modules/apps/components/Crede
 import AdditionalCalendarSelector from "@calcom/web/modules/calendars/components/AdditionalCalendarSelector";
 import { CalendarSwitch } from "@calcom/web/modules/calendars/components/CalendarSwitch";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export enum SelectedCalendarSettingsScope {
   User = "user",
@@ -149,6 +149,11 @@ export const SelectedCalendarsSettingsWebWrapper = (props: SelectedCalendarsSett
     eventTypeId = null,
   } = props;
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   let queryInput: { eventTypeId: number } | undefined;
   if (scope === SelectedCalendarSettingsScope.EventType) {
     queryInput = { eventTypeId: eventTypeId! };
@@ -161,8 +166,10 @@ export const SelectedCalendarsSettingsWebWrapper = (props: SelectedCalendarsSett
 
   const query = trpc.viewer.calendars.connectedCalendars.useQuery(queryInput, {
     initialData,
-    suspense: true,
+    suspense: false,
     refetchOnWindowFocus: false,
+    trpc: { ssr: false },
+    enabled: isMounted,
   });
 
   const isPending = props.isPending;
@@ -174,6 +181,10 @@ export const SelectedCalendarsSettingsWebWrapper = (props: SelectedCalendarsSett
   }
 
   const shouldDisableConnectionModification = isDisabled || disableConnectionModification;
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <div>
       <SelectedCalendarsSettings classNames={props.classNames}>

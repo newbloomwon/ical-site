@@ -34,6 +34,7 @@ export const Select = <
   };
 }) => {
   const { classNames, innerClassNames, menuPlacement = "auto", ...restProps } = props;
+  const instanceId = useId();
   const reactSelectProps = React.useMemo(() => {
     return getReactSelectProps<Option, IsMulti, Group>({
       components: components || {},
@@ -48,6 +49,8 @@ export const Select = <
   return (
     <ReactSelect
       {...reactSelectProps}
+      instanceId={instanceId}
+      aria-activedescendant=""
       menuPlacement={menuPlacement}
       styles={{
         control: (base, _props) =>

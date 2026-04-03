@@ -13,19 +13,21 @@ export type ListProps = {
 } & JSX.IntrinsicElements["ul"];
 
 export function List(props: ListProps) {
+  const { roundContainer, noBorderTreatment, className, children, ...passThroughProps } = props;
+
   return (
     <ul
       data-testid="list"
-      {...props}
+      {...passThroughProps}
       className={classNames(
         "mx-0 rounded-sm sm:overflow-hidden ",
         // Add rounded top and bottom if roundContainer is true
-        props.roundContainer && "[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-b-md ",
-        !props.noBorderTreatment &&
+        roundContainer && "[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-b-md ",
+        !noBorderTreatment &&
           "border-subtle divide-subtle divide-y rounded-md border border-l border-r ",
-        props.className
+        className
       )}>
-      {props.children}
+      {children}
     </ul>
   );
 }

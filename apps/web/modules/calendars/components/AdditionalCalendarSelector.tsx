@@ -1,5 +1,3 @@
-import type { FunctionComponent, SVGProps } from "react";
-
 import { InstallAppButton } from "@calcom/app-store/InstallAppButton";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -50,10 +48,14 @@ const AdditionalCalendarSelector = ({ isPending }: AdditionalCalendarSelectorPro
             ) : (
               <InstallAppButton
                 type={data.type}
-                render={(installProps) => {
-                  const props = { ...installProps } as FunctionComponent<SVGProps<SVGSVGElement>>;
+                render={({ useDefaultComponent: _useDefaultComponent, onClick, disabled, href }) => {
                   return (
-                    <DropdownItem {...props} color="minimal" type="button">
+                    <DropdownItem
+                      onClick={onClick}
+                      disabled={disabled}
+                      href={href}
+                      color="minimal"
+                      type="button">
                       <span className="flex items-center gap-x-2">
                         {data.image && <img className="h-5 w-5" src={data.image} alt={data.label} />}
                         {`${t("add")} ${data.label}`}

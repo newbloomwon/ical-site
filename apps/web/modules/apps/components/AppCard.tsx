@@ -28,6 +28,15 @@ interface AppCardProps {
   userAdminTeams?: UserAdminTeams;
 }
 
+const getGoogleCalendarOAuthAddUrl = () => {
+  const state = {
+    fromApp: true,
+    onErrorReturnTo: `${WEBAPP_URL}/apps/google-calendar`,
+    returnTo: `${WEBAPP_URL}/apps/installed/calendar?hl=google-calendar`,
+  };
+  return `/api/integrations/googlecalendar/add?state=${encodeURIComponent(JSON.stringify(state))}`;
+};
+
 export function AppCard({ app, credentials, searchText, userAdminTeams }: AppCardProps) {
   const { t } = useLocale();
   const router = useRouter();
@@ -73,12 +82,7 @@ export function AppCard({ app, credentials, searchText, userAdminTeams }: AppCar
 
     // Google Calendar is OAuth-first and should connect immediately from app-store cards.
     if (app.type === "google_calendar") {
-      mutation.mutate({
-        type: app.type,
-        variant: app.variant,
-        slug: app.slug,
-        returnTo: `${WEBAPP_URL}/apps/installed/calendar?hl=${app.slug}`,
-      });
+      window.location.href = getGoogleCalendarOAuthAddUrl();
       return;
     }
 
